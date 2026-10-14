@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Group Study Notes</title>
+    <!-- Including the Ably Library for instant messaging -->
+    <script src="https://ably.com"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f9;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            box-sizing: border-box;
+        }
+        #chat-box {
+            flex: 1;
+            border: 1px solid #ccc;
+            background: #fff;
+            padding: 15px;
+            overflow-y: scroll;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        .message {
+            margin-bottom: 12px;
+            line-height: 1.4;
+        }
+        .username {
+            font-weight: bold;
+            color: #2b6cb0;
+        }
+        #input-container {
+            display: flex;
+            gap: 10px;
+        }
+        input {
+            flex: 1;
+            padding: 12px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            font-size: 16px;
+        }
+        button {
+            padding: 12px 24px;
+            background-color: #3182ce;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        button:hover {
+            background-color: #2b6cb0;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="chat-box"></div>
+    
+    <div id="input-container">
+        <input type="text" id="msg-input" placeholder="Type a message..." autocomplete="off">
+        <button id="send-btn">Send</button>
+    </div>
+
+    <script>
+        // 1. Connect to Ably (REPLACE WITH YOUR ACTUAL FREE API KEY)
+        const ably = new Ably.Realtime('tB8Qag.zIW1KQ:cuhFqkzuDJOpFruW8sBuruE59AGz33G58IhPiDlH98w');
+        const channel = ably.channels.get('school-chat-room');
+
+        // 2. Generate a random anonymous username for this session
+        const adjectives = ["Sneaky", "Ghostly", "Clever", "Silent", "Hidden"];
+        const nouns = ["Ninja", "Shadow", "Coder", "Owl", "Fox"];
+        const myUsername = adjectives[Math.floor(Math.random() * adjectives.length)] + " " + nouns[Math.floor(Math.random() * nouns.length)];
+
+        const chatBox = document.getElementById('chat-box');
+        const msgInput = document.getElementById('msg-input');
+        const sendBtn = document.getElementById('send-btn');
+
+        // 3. Listen for incoming text messages from friends
+        channel.subscribe('message', (msg) => {
+            const msgElement = document.createElement('div');
+            msgElement.classList.add('message');
+            msgElement.innerHTML = `<span class="username">${msg.data.user}:</span> ${msg.data.text}`;
+            chatBox.appendChild(msgElement);
+            chatBox.scrollTop = chatBox.scrollHeight; // Auto-scroll to bottom
+        });
+
+        // 4. Function to send a message
+        function sendMessage() {
+            const text = msgInput.value.trim();
+            if (text !== '') {
+                channel.publish('message', { user: myUsername, text: text });
+                msgInput.value = '';
+            }
+        }
+
+        // Send on button click or Enter key press
+        sendBtn.addEventListener('click', sendMessage);
+        msgInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') sendMessage();
+        });
+    </script>
+</body>
+</html>
